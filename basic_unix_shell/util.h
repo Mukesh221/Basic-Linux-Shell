@@ -166,141 +166,11 @@ int removeDirectory(const char *path) {
     return r;
 }
 
-
-
-int rm_(char* args[]){
-      char tag = '\0';
-      char file[20][10000] = {};
-      struct stat path_stat;
-      int i = 0;
-      if(args[1][0] == '-'){
-          if(args[1][1]){
-             // Acquire Option type
-             tag = args[1][1];
-             if (args[1][2] != '\0') {
-                 printf("rm function can use only -f,-r or -v");
-                 return -1;
-             }
-             //Acquire File Path
-             if(strpbrk(args[2], "/")) {
-                while(args[i + 2] != NULL) {
-                     strcat(file[i], args[i+2]);
-                     i++;
-                }
-             }
-             else{
-                 while(args[i + 2] != NULL) {
-                     getcwd(file[i], 1000);
-                     strcat(file[i], "/");
-                     strcat(file[i], args[i+2]);
-                     i++;
-                 }
-             }
-             //Option Wise operations
-             if(tag == 'r'){
-                for(int j = 0; j < i; j++) {
-                   //determine information about a file based on its file path
-                   if(stat(file[j], &path_stat) != 0){
-                      printf("error\n");
-                      return -1;
-                   }
-                   if (S_ISDIR(path_stat.st_mode))removeDirectory(file[j]);
-                   else{
-                      printf("Error : Option -r requires path to be a directory.");
-                      return -1;
-                   }
-                }
-             }
-             else if(tag == 'f'){
-                 for(int j = 0; j < i; j++){
-                    //determine information about a file based on its file path
-                    if (stat(file[j], &path_stat) != 0) {
-                        printf("error\n");
-                        return -1;
-                    }
-                    if(!S_ISREG(path_stat.st_mode)) {
-                        printf("Error : Option -f with rm requires path to be a file.");
-                        return -1;
-                    }
-                    remove(file[j]);
-                 }
-             }
-             else if(tag == 'v'){
-                 for(int j = 0; j < i; j++) {
-                     //determine information about a file based on its file path
-                     if (stat(file[j], &path_stat) != 0) {
-                         printf("error\n");
-                         return -1;
-                     }
-
-                     if(!S_ISREG(path_stat.st_mode)) {
-                         printf("Error : Option -v with rm requires path to be a file.");
-                         return -1;
-                     }
-                     printf("%s Removed", file[j]);
-                     removeFile(file[j]);
-                 }
-             }
-             else{
-                 printf("Error : Invalid Option Specified: rm function can use only -f,-r or -v");
-                 return -1;
-             };
-          }
-       }
-       //if no option is specified
-       else{
-           while(args[i + 1] != NULL) {
-               strcat(file[i], args[i+1]);
-               i++;
-           }
-           for(int j = 0; j < i; j++) {
-              //determine information about a file based on its file path
-              if(stat(file[j], &path_stat) != 0) {
-                 printf("error\n");
-                 return -1;
-              }
-
-              if (S_ISREG(path_stat.st_mode))removeFile(file[j]);
-              else {
-                  printf("Error : Invalid Path");
-                  return -1;
-              };
-            }
-        }
-    return 0;    
-}
 int rmdir_(char *args[]){
     int r = rmdir(args[1]);
     printf("Directory Deleted Successfully\n");
     return r;
 }
-
-int launch(char **args){
-  pid_t pid, wpid;
-  int status;
-
-  pid = fork();
-  
-  if(pid == 0){
-     // Child process
-     if(execvp(args[0], args) == -1)
-        perror("lsh");
-     exit(EXIT_FAILURE);
-  }
-  else if (pid < 0){
-     // Error forking
-     perror("lsh");
-  } 
-  else{
-    // Parent process
-    do{
-       wpid = waitpid(pid, &status, WUNTRACED);
-    }while(!WIFEXITED(status) && !WIFSIGNALED(status));
-  }
-
-  return 1;
-}
-
 
 int commandHandler(char *args[]) {
     int i=0;
@@ -319,9 +189,6 @@ int commandHandler(char *args[]) {
     
     else if (strcmp(args[0], "rmdir") == 0) rmdir_(args);
     
-    else if (strcmp(args[0], "rm") == 0) rm_(args);
-    
-    else return launch(args);
-    
-
+    else return (strcmp(args[0], "rm") == 0) rm_(args);
+   
 }
